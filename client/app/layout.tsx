@@ -1,13 +1,21 @@
 import "./globals.css"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Poppins } from "next/font/google"
+import { validateEnv } from "./config"
+import { Analytics } from '@vercel/analytics/next';
 
-const inter = Inter({ subsets: ["latin"] })
+const poppins = Poppins({
+  weight: ["400", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+})
 
 export const metadata: Metadata = {
-  title: "Project Suggester",
-  description: "Get project ideas based on your tech niche and skill level",
+  title: "PRO-HELPER | Project Suggester",
+  description: "Get personalized project ideas based on your tech niche, skill level, and target audience",
 }
+
+validateEnv()
 
 export default function RootLayout({
   children,
@@ -15,8 +23,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${poppins.className} antialiased`}>{children}
+      <Analytics />
+      </body>
     </html>
   )
 }

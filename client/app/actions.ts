@@ -1,23 +1,39 @@
 "use server"
 
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
-export async function generateProjectIdeas(niche: string, difficulty: string) {
-  const prompt = `Suggest 3 project ideas for a ${difficulty} level developer in ${niche}. Provide a brief description for each project.`
+// Initialize the Gemini AI client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")
 
+export async function generateProjectIdeas(niche: string, difficulty: string, audience: string) {
   try {
-    const { text } = await generateText({
-      model: openai("gpt-4o"),
-      prompt: prompt,
-    })
+    // Initialize the model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" })
 
-    // Split the text into an array of project ideas
-    const ideas = text.split("\n").filter((idea) => idea.trim() !== "")
-    return ideas
+    // Generate content
+    const result = await model.generateContent(
+      `Generate 3 project ideas for ${niche} with ${difficulty} difficulty level, targeting ${audience}. Format each idea as a numbered list with a brief description.`,
+    )
+    const response = await result.response
+    const text = response.text()
+
+    // Process the response into an array of ideas
+    const ideas = text
+      .split("\n")
+      .filter((line) => line.trim().length > 0 && /^\d+\./.test(line.trim()))
+      .map((idea) => idea.trim())
+
+    if (!ideas.length) {
+      throw new Error("No project ideas were generated")
+    }
+
+    return { success: true, data: ideas }
   } catch (error) {
     console.error("Error generating project ideas:", error)
-    throw new Error("Failed to generate project ideas")
+    return {
+      success: false,
+      error: "Failed to generate project ideas. Please try again.",
+    }
   }
 }
 
